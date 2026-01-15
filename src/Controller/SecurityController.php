@@ -23,7 +23,7 @@ class SecurityController extends AbstractController
     {
     }
 
-    #[Route('/registration', name: 'registration', methods: 'POST')]
+    #[Route('/registration', name: 'registration', methods: ['POST'])]
     #[OA\Post(
         path: '/api/registration',
         description: "Données de l'utilisateur à inscrire",
@@ -38,7 +38,7 @@ class SecurityController extends AbstractController
                 type: 'object'
             )
         ),
-        tags: ["user"],
+        tags: ["User"],
         responses: [
             new OA\Response(
                 response: 201,
@@ -77,7 +77,7 @@ class SecurityController extends AbstractController
         );
     }
 
-    #[Route('/login', name: 'login', methods: 'POST')]
+    #[Route('/login', name: 'login', methods: ['POST'])]
     #[OA\Post(
         path: '/api/login',
         description: "Données de l'utilisateur à inscrire",
