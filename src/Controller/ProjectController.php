@@ -7,39 +7,32 @@ use App\Repository\ProjectRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
+use Symfony\Component\Serializer\SerializerInterface;
 
 //Route primaire pour ne pas la répéter dans chaque fonction
 #[Route('api/project', name: 'app_api_project_')]
 
 class ProjectController extends AbstractController
 {
-    public function __construct(private EntityManagerInterface $manager, private ProjectRepository $repository)
+    public function __construct(
+        private EntityManagerInterface $manager,
+        private ProjectRepository $repository,
+        private SerializerInterface $serializer,
+        private UrlGeneratorInterface $urlGenerator,)
     {
     }
 
-    #[Route(name: 'new', methods: 'POST')]
-    public function new(): Response
+    #[Route('', name: 'new', methods: ['GET', 'POST'])]
+    public function new(Request $request): JsonResponse
     {
-        // Création du projet
-        $project = new Project();
-
-        // Nom du projet
-        $project->setTitle ( title: 'PixelVerse Studio');
-
-        // Description du projet
-        $project->setDescription ( description: 'ECF');
-
-        // Lien de l'image
-        $project->setImage ( image: 'src/images/image.png');
-
-        // Lien github
-        $project->setGithubUrl ( github_url: 'http://googl.com');
-
-        // Lien server
-        $project->setLiveUrl ( live_url: 'http://google.com');
-
+        // Création du projet avec les données de la request
+        $project = $this->serializer->deserialize($request->getContent(), Project::class, 'json');
+       
         // Date de création
         $project->setCreatedAt (new \DateTimeImmutable());
 
@@ -48,72 +41,75 @@ class ProjectController extends AbstractController
         $this->manager->flush();
 
         // On retourne le message de création avec l'id du projet
-        return $this->json(
-            ['message' => "Project resource created with {$project->getId()} id"], Response::HTTP_CREATED);
+        return new JsonResponse($request, Response::HTTP_CREATED, [], true);
     }
 
     #[Route('/{id}', name: 'show', methods: 'GET')]
-    public function show(int $id): Response
+    public function show(int $id): JsonResponse
     {
         // On va chercher le projet avec l'id demandé
         $project = $this->repository->findOneBy(['id' => $id]);
 
         // On vérifie si le projet existe
-        if(!$project)
+        if($project)
         {
-            // On envoie un message s'il n'existe pas avec l'id demandé
-            throw new \Exception("No Project found for {$id}");
+            $responseData = $this->serializer->serialize($project, 'json');
+
+            // On envoie un message s'il existe avec l'id demandé
+            return new JsonResponse($responseData, Response::HTTP_OK, [], true);
         }
 
-        return $this->json(['message' => "A Project was found: {$project->getTitle()}, for {$project->getId()} id"]);
+        return new JsonResponse(null, Response::HTTP_NOT_FOUND);
     }
 
     #[Route('/{id}', name: 'edit', methods: 'PUT')]
-    public function edit(int $id): Response
+    public function edit(int $id, Request $request): JsonResponse
     {
         // On va chercher le projet avec l'id demandé
         $project = $this->repository->findOneBy(['id' => $id]);
 
         // On vérifie si le projet existe
-        if(!$project)
+        if($project)
         {
-            // On envoie un message s'il n'existe pas avec l'id demandé
-            throw new \Exception("No Project found for {$id}");
+            $project = $this->serializer->deserialize(
+                $request->getContent(),
+                Project::class,
+                'json',
+                [AbstractNormalizer::OBJECT_TO_POPULATE => $project]);
+
+            //On envoie en base de donnée
+            // Pas besoin de remettre le persist puisqu'on a récupéré les données de la BDD avec le findOneBy.
+            $this->manager->flush();
+
+            // On envoie un message s'il existe avec l'id demandé
+            return new JsonResponse(null, Response::HTTP_NO_CONTENT);
         }
 
-        // On change le nom du projet
-        $project->setTitle ('PixelVerse Studio updated');
-
-        //On envoie en base de donnée
-        // Pas besoin de remettre le persist puisqu'on a récupéré les données de la BDD avec le findOneBy.
-        $this->manager->flush();
-
-        // On retoune vers show pour voir la mise à jour
-        return $this->redirectToRoute('app_api_project_show', ['id' => $project->getId()]);
+        // On envoie un message s'il n'existe pas avec l'id demandé
+        return new JsonResponse(null, Response::HTTP_NOT_FOUND);
     }
 
     #[Route('/{id}', name: 'delete', methods: 'DELETE')]
-    public function delete(int $id): Response
+    public function delete(int $id): JsonResponse
     {
         // On va chercher le projet avec l'id demandé
         $project = $this->repository->findOneBy(['id' => $id]);
 
         // On vérifie si le projet existe
-        if(!$project)
+        if($project)
         {
-            // On envoie un message s'il n'existe pas avec l'id demandé
-            throw new \Exception("No Project found for {$id}");
+            // On supprime le projet
+            $this->manager->remove($project);
+
+            //On envoie en base de donnée
+            // Pas besoin de remettre le persist puisqu'on a récupéré les données de la BDD avec le findOneBy.
+            $this->manager->flush();
+
+            // On envoie un message s'il existe avec l'id demandé
+            return new JsonResponse(null, Response::HTTP_NO_CONTENT);
         }
 
-        // On supprime le projet
-        $this->manager->remove($project);
-
-        //On envoie en base de donnée
-        // Pas besoin de remettre le persist puisqu'on a récupéré les données de la BDD avec le findOneBy.
-        $this->manager->flush();
-
-        // On retourne un message pour dire que le projet a bien été supprimé
-        // HTTP_NO_CONTENT pour dire que la requète c'est bien executé
-        return $this->json(['message' => "Project resource deleted"], Response::HTTP_NO_CONTENT);
+        //On envoie un message s'il n'existe pas avec l'id demandé
+        return new JsonResponse(null, Response::HTTP_NOT_FOUND);
     }
 }
