@@ -34,6 +34,7 @@ security:
         # - { path: ^/profile, roles: ROLE_USER }
         - { path: ^/api/registration, roles: ROLE_ADMIN }
         - { path: ^/api/login, roles: PUBLIC_ACCESS }
+        - { path: ^/api/doc, roles: PUBLIC_ACCESS }
         - { path: ^/api, roles: ROLE_USER }
 
 when@test:
