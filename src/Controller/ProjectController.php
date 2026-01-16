@@ -140,6 +140,53 @@ class ProjectController extends AbstractController
     }
 
     #[Route('/{id}', name: 'edit', methods: 'PUT')]
+    #[OA\Put(
+        path: '/api/project/{id}',
+        description: "ID du projet à modifier",
+        summary: "Modifier un projet par son ID",
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'title', type: 'string', example: 'titre du projet'),
+                    new OA\Property(property: 'description', type: 'string', example: 'Description du projet'),
+                    new OA\Property(property: 'image', type: 'string', example: 'image/image.png'),
+                    new OA\Property(property: 'github_url', type: 'string', example: 'http://exemple.com'),
+                    new OA\Property(property: 'live_url', type: 'string', example: 'http://exemple.com'),
+                ],
+                type: 'object'
+            )
+        ),
+        tags: ["Project"],
+        responses: [
+            new OA\Response(
+                response: 204,
+                description: "Projet modifier avec succès",
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'id', type: 'integer', example: 1),
+                        new OA\Property(property: 'title', type: 'string', example: 'titre du projet'),
+                        new OA\Property(property: 'description', type: 'string', example: 'Description du projet'),
+                        new OA\Property(property: 'image', type: 'string', example: 'image/image.png'),
+                        new OA\Property(property: 'github_url', type: 'string', example: 'http://exemple.com'),
+                        new OA\Property(property: 'live_url', type: 'string', example: 'http://exemple.com'),
+                        new OA\Property(property: 'createdAt', type: 'string', format: "date-time"),
+                        new OA\Property(property: 'skills', type: 'string', example: "[]")
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 404,
+                 description: "Projet non Trouvé"
+            ),
+            new OA\Response(
+                response: 500,
+                 description: "Id non valide"
+            )
+        ]
+
+    )]
+
     public function edit(int $id, Request $request): JsonResponse
     {
         // On va chercher le projet avec l'id demandé
