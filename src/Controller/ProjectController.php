@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Project;
 use App\Repository\ProjectRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -27,11 +28,53 @@ class ProjectController extends AbstractController
     {
     }
 
-    #[Route('', name: 'new', methods: ['GET', 'POST'])]
+    #[Route('', name: 'new', methods: ['POST'])]
+    #[OA\Post(
+        path: '/api/project',
+        description: "Données du projet à créer",
+        summary: "Créer un projet",
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'title', type: 'string', example: 'titre du projet'),
+                    new OA\Property(property: 'description', type: 'string', example: 'Description du projet'),
+                    new OA\Property(property: 'image', type: 'string', example: 'image/image.png'),
+                    new OA\Property(property: 'github_url', type: 'string', example: 'http://exemple.com'),
+                    new OA\Property(property: 'live_url', type: 'string', example: 'http://exemple.com'),
+                ],
+                type: 'object'
+            )
+        ),
+        tags: ["Project"],
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: "Restaurant créé avec succès",
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'id', type: 'integer', example: 1),
+                        new OA\Property(property: 'title', type: 'string', example: 'titre du projet'),
+                        new OA\Property(property: 'description', type: 'string', example: 'Description du projet'),
+                        new OA\Property(property: 'image', type: 'string', example: 'image/image.png'),
+                        new OA\Property(property: 'github_url', type: 'string', example: 'http://exemple.com'),
+                        new OA\Property(property: 'live_url', type: 'string', example: 'http://exemple.com'),
+                        new OA\Property(property: 'createdAt', type: 'string', format: "date-time"),
+                        new OA\Property(property: 'skills', type: 'string', example: "[]")
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 500,
+                 description: "Requête invalide"
+            )
+        ]
+
+    )]
     public function new(Request $request): JsonResponse
     {
         // Création du projet avec les données de la request
-        $project = $this->serializer->deserialize($request->getContent(), Project::class, 'json');
+        $project = $this->serializer->deserialize($request->getContent(), Project::class, 'json', ['groups' => ['project:write']]);
        
         // Date de création
         $project->setCreatedAt (new \DateTimeImmutable());
@@ -41,7 +84,7 @@ class ProjectController extends AbstractController
         $this->manager->flush();
 
         // On retourne le message de création avec l'id du projet
-        return new JsonResponse($request, Response::HTTP_CREATED, [], true);
+        return $this->Json($project, Response::HTTP_CREATED, [], ['groups' => ['project:read']]);
     }
 
     #[Route('/{id}', name: 'show', methods: 'GET')]

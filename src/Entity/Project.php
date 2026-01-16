@@ -7,6 +7,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: ProjectRepository::class)]
 class Project
@@ -14,30 +15,38 @@ class Project
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['project:read', 'project:write'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 150)]
+    #[Groups(['project:read', 'project:write'])]
     private ?string $title = null;
 
     #[ORM\Column(type: Types::TEXT)]
+    #[Groups(['project:read', 'project:write'])]
     private ?string $description = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['project:read', 'project:write'])]
     private ?string $image = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['project:read', 'project:write'])]
     private ?string $github_url = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['project:read', 'project:write'])]
     private ?string $live_url = null;
 
     #[ORM\Column]
+    #[Groups(['project:read', 'project:write'])]
     private ?\DateTimeImmutable $created_at = null;
 
     /**
      * @var Collection<int, Skill>
      */
     #[ORM\ManyToMany(targetEntity: Skill::class, inversedBy: 'projects')]
+    #[Groups(['project:read', 'project:write'])]
     private Collection $skills;
 
     public function __construct()
