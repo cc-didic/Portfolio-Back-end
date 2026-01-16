@@ -214,6 +214,31 @@ class ProjectController extends AbstractController
     }
 
     #[Route('/{id}', name: 'delete', methods: 'DELETE')]
+    #[OA\Delete(
+        path: '/api/project/{id}',
+        summary: "Supprimer un projet par son ID",
+        tags: ["Project"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                description: "ID du projet à supprimer",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer")
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 204,
+                description: "Projet supprimé avec succès",
+            ),
+            new OA\Response(
+                response: 404,
+                description: "Projet non Trouvé"
+            )
+        ]
+    )]
+
     public function delete(int $id): JsonResponse
     {
         // On va chercher le projet avec l'id demandé
