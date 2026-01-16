@@ -123,6 +123,46 @@ class SkillController extends AbstractController
     }
 
     #[Route('/{id}', name: 'edit', methods: 'PUT')]
+    #[OA\Put(
+        path: '/api/skill/{id}',
+        description: "ID de la compétence à modifier",
+        summary: "Modifier une compétence par son ID",
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'name', type: 'string', example: 'Nom du skill'),
+                    new OA\Property(property: 'logo', type: 'string', example: 'image/image.png')
+                ],
+                type: 'object'
+            )
+        ),
+        tags: ["Skill"],
+        responses: [
+            new OA\Response(
+                response: 204,
+                description: "Compétence modifier avec succès",
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'id', type: 'integer', example: 1),
+                        new OA\Property(property: 'name', type: 'string', example: 'Nom du skill'),
+                        new OA\Property(property: 'logo', type: 'string', example: 'image/image.png'),
+                        new OA\Property(property: 'project', type: 'string', example: "[]")
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 404,
+                 description: "Compétence non Trouvé"
+            ),
+            new OA\Response(
+                response: 500,
+                 description: "Id non valide"
+            )
+        ]
+
+    )]
+
     public function edit(int $id, Request $request): JsonResponse
     {
         // On va chercher le skill avce l'id demandé

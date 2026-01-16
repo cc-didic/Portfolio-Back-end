@@ -151,7 +151,7 @@ class ProjectController extends AbstractController
                     new OA\Property(property: 'description', type: 'string', example: 'Description du projet'),
                     new OA\Property(property: 'image', type: 'string', example: 'image/image.png'),
                     new OA\Property(property: 'github_url', type: 'string', example: 'http://exemple.com'),
-                    new OA\Property(property: 'live_url', type: 'string', example: 'http://exemple.com'),
+                    new OA\Property(property: 'live_url', type: 'string', example: 'http://exemple.com')
                 ],
                 type: 'object'
             )
