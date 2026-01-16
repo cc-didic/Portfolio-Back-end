@@ -94,7 +94,7 @@ class ProjectController extends AbstractController
         tags: ["Project"],
         responses: [
             new OA\Response(
-                response: 201,
+                response: 200,
                 description: "Projet trouvé avec succès",
                 content: new OA\JsonContent(
                     properties: [

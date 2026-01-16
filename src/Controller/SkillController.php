@@ -28,8 +28,8 @@ class SkillController extends AbstractController
     #[Route('', name: 'new', methods: 'POST')]
     #[OA\Post(
         path: '/api/skill',
-        description: "Données du skill à créer",
-        summary: "Créer un skill",
+        description: "Données de la compétence à créer",
+        summary: "Créer une compétence",
         requestBody: new OA\RequestBody(
             required: true,
             content: new OA\JsonContent(
@@ -44,7 +44,7 @@ class SkillController extends AbstractController
         responses: [
             new OA\Response(
                 response: 201,
-                description: "Skill créé avec succès",
+                description: "Compétence créé avec succès",
                 content: new OA\JsonContent(
                     properties: [
                         new OA\Property(property: 'id', type: 'integer', example: 1),
@@ -76,6 +76,36 @@ class SkillController extends AbstractController
     }
 
     #[Route('/{id}', name: 'show', methods: 'GET')]
+    #[OA\Get(
+        path: '/api/skill/{id}',
+        description: "ID de la compétence à afficher",
+        summary: "Afficher une compétence par son ID",
+        tags: ["Skill"],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Compétence trouvé avec succès",
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'id', type: 'integer', example: 1),
+                        new OA\Property(property: 'name', type: 'string', example: 'Nom du skill'),
+                        new OA\Property(property: 'logo', type: 'string', example: 'image/image.png'),
+                        new OA\Property(property: 'project', type: 'string', example: "[]")
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 404,
+                 description: "Compétence non Trouvé"
+            ),
+            new OA\Response(
+                response: 500,
+                 description: "Id non valide"
+            )
+        ]
+
+    )]
+
     public function show(int $id): JsonResponse
     {
         // On va chercher le skill avce l'id demandé
