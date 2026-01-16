@@ -88,6 +88,40 @@ class ProjectController extends AbstractController
     }
 
     #[Route('/{id}', name: 'show', methods: 'GET')]
+    #[OA\Get(
+        path: '/api/project/{id}',
+        description: "ID du projet à afficher",
+        summary: "Afficher un projet par son ID",
+        tags: ["Project"],
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: "Projet trouvé avec succès",
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'id', type: 'integer', example: 1),
+                        new OA\Property(property: 'title', type: 'string', example: 'titre du projet'),
+                        new OA\Property(property: 'description', type: 'string', example: 'Description du projet'),
+                        new OA\Property(property: 'image', type: 'string', example: 'image/image.png'),
+                        new OA\Property(property: 'github_url', type: 'string', example: 'http://exemple.com'),
+                        new OA\Property(property: 'live_url', type: 'string', example: 'http://exemple.com'),
+                        new OA\Property(property: 'createdAt', type: 'string', format: "date-time"),
+                        new OA\Property(property: 'skills', type: 'string', example: "[]")
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 404,
+                 description: "Projet non Trouvé"
+            ),
+            new OA\Response(
+                response: 500,
+                 description: "Id non valide"
+            )
+        ]
+
+    )]
+
     public function show(int $id): JsonResponse
     {
         // On va chercher le projet avec l'id demandé
