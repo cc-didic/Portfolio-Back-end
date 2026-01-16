@@ -23,8 +23,7 @@ class ProjectController extends AbstractController
     public function __construct(
         private EntityManagerInterface $manager,
         private ProjectRepository $repository,
-        private SerializerInterface $serializer,
-        private UrlGeneratorInterface $urlGenerator,)
+        private SerializerInterface $serializer)
     {
     }
 
