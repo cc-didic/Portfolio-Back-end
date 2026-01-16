@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Project;
 use App\Repository\ProjectRepository;
+use App\Repository\SkillRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -23,7 +24,8 @@ class ProjectController extends AbstractController
     public function __construct(
         private EntityManagerInterface $manager,
         private ProjectRepository $repository,
-        private SerializerInterface $serializer)
+        private SerializerInterface $serializer,
+        private SkillRepository $skillRepository)
     {
     }
 
@@ -41,6 +43,7 @@ class ProjectController extends AbstractController
                     new OA\Property(property: 'image', type: 'string', example: 'image/image.png'),
                     new OA\Property(property: 'github_url', type: 'string', example: 'http://exemple.com'),
                     new OA\Property(property: 'live_url', type: 'string', example: 'http://exemple.com'),
+                    new OA\Property(property: 'skills', type: 'array', items: new OA\Items(type: 'integer', example: 1), example: [1, 2])
                 ],
                 type: 'object'
             )
@@ -59,7 +62,7 @@ class ProjectController extends AbstractController
                         new OA\Property(property: 'github_url', type: 'string', example: 'http://exemple.com'),
                         new OA\Property(property: 'live_url', type: 'string', example: 'http://exemple.com'),
                         new OA\Property(property: 'createdAt', type: 'string', format: "date-time"),
-                        new OA\Property(property: 'skills', type: 'string', example: "[]")
+                        new OA\Property(property: 'skills', type: 'array', items: new OA\Items(type: 'integer', example: 1), example: [1, 2])
                     ]
                 )
             ),
@@ -77,6 +80,16 @@ class ProjectController extends AbstractController
        
         // Date de création
         $project->setCreatedAt (new \DateTimeImmutable());
+
+        // Ajout des skills
+        $data = json_decode($request->getContent(), true);
+
+        foreach($data['skills'] ?? [] as $skillId){
+            $skill = $this->skillRepository->find($skillId);
+            if($skill){
+                $project->addSkill($skill);
+            }
+        }
 
         //On envoie en base de donnée
         $this->manager->persist($project);
@@ -105,7 +118,7 @@ class ProjectController extends AbstractController
                         new OA\Property(property: 'github_url', type: 'string', example: 'http://exemple.com'),
                         new OA\Property(property: 'live_url', type: 'string', example: 'http://exemple.com'),
                         new OA\Property(property: 'createdAt', type: 'string', format: "date-time"),
-                        new OA\Property(property: 'skills', type: 'string', example: "[]")
+                        new OA\Property(property: 'skills', type: 'array', items: new OA\Items(type: 'integer', example: 1), example: [1, 2])
                     ]
                 )
             ),
@@ -129,10 +142,25 @@ class ProjectController extends AbstractController
         // On vérifie si le projet existe
         if($project)
         {
-            $responseData = $this->serializer->serialize($project, 'json');
+            // Sérialisation du projet en ignorant skills
+            $responseData = $this->serializer->serialize($project, 'json', [AbstractNormalizer::IGNORED_ATTRIBUTES => ['skills']]);
+            $responseData = json_decode($responseData, true);
+
+            // Ajout manuel des skills
+            $skills = [];
+
+            foreach ($project->getSkills() as $skill){
+                $skills[] = [
+                    'id' => $skill->getId(),
+                    'name' => $skill->getName(),
+                    'logo' => $skill->getLogo()
+                ];
+            }
+
+            $responseData['skills'] = $skills;
 
             // On envoie un message s'il existe avec l'id demandé
-            return new JsonResponse($responseData, Response::HTTP_OK, [], true);
+            return new JsonResponse($responseData, Response::HTTP_OK);
         }
 
         return new JsonResponse(null, Response::HTTP_NOT_FOUND);
@@ -151,7 +179,8 @@ class ProjectController extends AbstractController
                     new OA\Property(property: 'description', type: 'string', example: 'Description du projet'),
                     new OA\Property(property: 'image', type: 'string', example: 'image/image.png'),
                     new OA\Property(property: 'github_url', type: 'string', example: 'http://exemple.com'),
-                    new OA\Property(property: 'live_url', type: 'string', example: 'http://exemple.com')
+                    new OA\Property(property: 'live_url', type: 'string', example: 'http://exemple.com'),
+                    new OA\Property(property: 'skills', type: 'array', items: new OA\Items(type: 'integer', example: 1), example: [1, 2])
                 ],
                 type: 'object'
             )
@@ -170,7 +199,7 @@ class ProjectController extends AbstractController
                         new OA\Property(property: 'github_url', type: 'string', example: 'http://exemple.com'),
                         new OA\Property(property: 'live_url', type: 'string', example: 'http://exemple.com'),
                         new OA\Property(property: 'createdAt', type: 'string', format: "date-time"),
-                        new OA\Property(property: 'skills', type: 'string', example: "[]")
+                        new OA\Property(property: 'skills', type: 'array', items: new OA\Items(type: 'integer', example: 1), example: [1, 2])
                     ]
                 )
             ),
@@ -198,7 +227,30 @@ class ProjectController extends AbstractController
                 $request->getContent(),
                 Project::class,
                 'json',
-                [AbstractNormalizer::OBJECT_TO_POPULATE => $project]);
+                [AbstractNormalizer::OBJECT_TO_POPULATE => $project]
+            );
+
+            // Récupération du JSON
+            $data = json_decode($request->getContent(), true);
+
+            // Gestion des skills
+            if(isset($data['skills']) && is_array($data['skills'])){
+
+                // On supprime les compétences existantes
+                foreach($project->getSkills() as $skill){
+                    $project->removeSkill($skill);
+                }
+
+                // On ajoute les nouvelles compétences
+                foreach($data['skills'] as $skillId){
+                    $skill = $this->skillRepository->find($skillId);
+                    if($skill){
+                        $project->addSkill($skill);
+                    }
+                }
+            }
+
+            
 
             //On envoie en base de donnée
             // Pas besoin de remettre le persist puisqu'on a récupéré les données de la BDD avec le findOneBy.
@@ -246,6 +298,11 @@ class ProjectController extends AbstractController
         // On vérifie si le projet existe
         if($project)
         {
+            // Suppression des relations skills
+            foreach($project->getSkills() as $skill){
+                $project->removeSkill($skill);
+            }
+            
             // On supprime le projet
             $this->manager->remove($project);
 

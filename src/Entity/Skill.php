@@ -6,6 +6,7 @@ use App\Repository\SkillRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: SkillRepository::class)]
 class Skill
@@ -13,22 +14,22 @@ class Skill
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['skill:read', 'skill:write'])]
+    #[Groups(['project:read', 'skill:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 150)]
-    #[Groups(['skill:read', 'skill:write'])]
+    #[Groups(['project:read', 'skill:read'])]
     private ?string $name = null;
 
     #[ORM\Column(length: 150)]
-    #[Groups(['skill:read', 'skill:write'])]
+    #[Groups(['project:read', 'skill:read'])]
     private ?string $logo = null;
 
     /**
      * @var Collection<int, Project>
      */
     #[ORM\ManyToMany(targetEntity: Project::class, mappedBy: 'skills')]
-    #[Groups(['skill:read', 'skill:write'])]
+    #[Groups(['skill:read'])]
     private Collection $projects;
 
     public function __construct()

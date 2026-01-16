@@ -46,7 +46,7 @@ class Project
      * @var Collection<int, Skill>
      */
     #[ORM\ManyToMany(targetEntity: Skill::class, inversedBy: 'projects')]
-    #[Groups(['project:read', 'project:write'])]
+    #[Groups(['project:read'])]
     private Collection $skills;
 
     public function __construct()

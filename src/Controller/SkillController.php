@@ -34,7 +34,7 @@ class SkillController extends AbstractController
             required: true,
             content: new OA\JsonContent(
                 properties: [
-                    new OA\Property(property: 'name', type: 'string', example: 'Nom du skill'),
+                    new OA\Property(property: 'name', type: 'string', example: 'Nom de la compétence'),
                     new OA\Property(property: 'logo', type: 'string', example: 'image/image.png'),
                 ],
                 type: 'object'
@@ -48,7 +48,7 @@ class SkillController extends AbstractController
                 content: new OA\JsonContent(
                     properties: [
                         new OA\Property(property: 'id', type: 'integer', example: 1),
-                        new OA\Property(property: 'name', type: 'string', example: 'Nom du skill'),
+                        new OA\Property(property: 'name', type: 'string', example: 'Nom de la compétence'),
                         new OA\Property(property: 'logo', type: 'string', example: 'image/image.png'),
                         new OA\Property(property: 'project', type: 'string', example: "[]")
                     ]
@@ -88,7 +88,7 @@ class SkillController extends AbstractController
                 content: new OA\JsonContent(
                     properties: [
                         new OA\Property(property: 'id', type: 'integer', example: 1),
-                        new OA\Property(property: 'name', type: 'string', example: 'Nom du skill'),
+                        new OA\Property(property: 'name', type: 'string', example: 'Nom de la compétence'),
                         new OA\Property(property: 'logo', type: 'string', example: 'image/image.png'),
                         new OA\Property(property: 'project', type: 'string', example: "[]")
                     ]
@@ -131,7 +131,7 @@ class SkillController extends AbstractController
             required: true,
             content: new OA\JsonContent(
                 properties: [
-                    new OA\Property(property: 'name', type: 'string', example: 'Nom du skill'),
+                    new OA\Property(property: 'name', type: 'string', example: 'Nom de la compétence'),
                     new OA\Property(property: 'logo', type: 'string', example: 'image/image.png')
                 ],
                 type: 'object'
@@ -145,7 +145,7 @@ class SkillController extends AbstractController
                 content: new OA\JsonContent(
                     properties: [
                         new OA\Property(property: 'id', type: 'integer', example: 1),
-                        new OA\Property(property: 'name', type: 'string', example: 'Nom du skill'),
+                        new OA\Property(property: 'name', type: 'string', example: 'Nom de la compétence'),
                         new OA\Property(property: 'logo', type: 'string', example: 'image/image.png'),
                         new OA\Property(property: 'project', type: 'string', example: "[]")
                     ]
@@ -189,6 +189,31 @@ class SkillController extends AbstractController
     }
 
     #[Route('/{id}', name: 'delete', methods: 'DELETE')]
+    #[OA\Delete(
+        path: '/api/skill/{id}',
+        summary: "Supprimer une compétence par son ID",
+        tags: ["Skill"],
+        parameters: [
+            new OA\Parameter(
+                name: "id",
+                description: "ID de la compétence à supprimer",
+                in: "path",
+                required: true,
+                schema: new OA\Schema(type: "integer")
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 204,
+                description: "Compétence supprimé avec succès",
+            ),
+            new OA\Response(
+                response: 404,
+                description: "Projet non Trouvé"
+            )
+        ]
+    )]
+
     public function delete(int $id): JsonResponse
     {
         // On va chercher le skill avce l'id demandé
