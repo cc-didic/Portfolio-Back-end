@@ -13,18 +13,22 @@ class Skill
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['skill:read', 'skill:write'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 150)]
+    #[Groups(['skill:read', 'skill:write'])]
     private ?string $name = null;
 
     #[ORM\Column(length: 150)]
+    #[Groups(['skill:read', 'skill:write'])]
     private ?string $logo = null;
 
     /**
      * @var Collection<int, Project>
      */
     #[ORM\ManyToMany(targetEntity: Project::class, mappedBy: 'skills')]
+    #[Groups(['skill:read', 'skill:write'])]
     private Collection $projects;
 
     public function __construct()

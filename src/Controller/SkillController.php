@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Skill;
 use App\Repository\SkillRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -25,6 +26,42 @@ class SkillController extends AbstractController
     }
 
     #[Route('', name: 'new', methods: 'POST')]
+    #[OA\Post(
+        path: '/api/skill',
+        description: "Données du skill à créer",
+        summary: "Créer un skill",
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'name', type: 'string', example: 'Nom du skill'),
+                    new OA\Property(property: 'logo', type: 'string', example: 'image/image.png'),
+                ],
+                type: 'object'
+            )
+        ),
+        tags: ["Skill"],
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: "Skill créé avec succès",
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'id', type: 'integer', example: 1),
+                        new OA\Property(property: 'name', type: 'string', example: 'Nom du skill'),
+                        new OA\Property(property: 'logo', type: 'string', example: 'image/image.png'),
+                        new OA\Property(property: 'project', type: 'string', example: "[]")
+                    ]
+                )
+            ),
+            new OA\Response(
+                response: 500,
+                 description: "Requête invalide"
+            )
+        ]
+
+    )]
+
     public function new(Request $request): JsonResponse
     {
         // Création du skill avec les données de la request
@@ -35,7 +72,7 @@ class SkillController extends AbstractController
         $this->manager->flush();
 
         // On retourne le message de création avec l'id du skill
-        return new JsonResponse($request, Response::HTTP_CREATED, [], true);
+        return $this->Json($skill, Response::HTTP_CREATED, [], ['groups' => ['skill:read']]);
     }
 
     #[Route('/{id}', name: 'show', methods: 'GET')]
