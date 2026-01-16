@@ -6,8 +6,11 @@ use App\Entity\Skill;
 use App\Repository\SkillRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\SerializerInterface;
 
 #[Route('api/skill', name: 'app_api_skill_')]
@@ -21,87 +24,83 @@ class SkillController extends AbstractController
     {
     }
 
-    #[Route(name: 'new', methods: 'POST')]
-    public function new(): Response
+    #[Route('', name: 'new', methods: 'POST')]
+    public function new(Request $request): JsonResponse
     {
-        // Création du skill
-        $skill = new Skill();
-
-        // Nom du skill
-        $skill->setName(name: 'Symfony');
-
-        // Logo du skill
-        $skill->setLogo(logo: 'image/image.png');
+        // Création du skill avec les données de la request
+        $skill = $this->serializer->deserialize($request->getContent(), Skill::class, 'json');
 
         // On envoie en base de donnée
         $this->manager->persist($skill);
         $this->manager->flush();
 
         // On retourne le message de création avec l'id du skill
-        return $this->json(
-            ['message' => "Skill resource created whit {$skill->getId()} id"],
-            Response::HTTP_CREATED
-        );
+        return new JsonResponse($request, Response::HTTP_CREATED, [], true);
     }
 
     #[Route('/{id}', name: 'show', methods: 'GET')]
-    public function show(int $id): Response
+    public function show(int $id): JsonResponse
     {
         // On va chercher le skill avce l'id demandé
         $skill = $this->repository->findOneBy(['id' => $id]);
 
         // On vérifie si le skill existe
-        if(!$skill){
-            // On envoie un message s'il n'existe pas avec l'id demandé
-            throw new \Exception("No Skill found for {$id}");
+        if($skill){
+            $skillData = $this->serializer->serialize($skill, 'json');
+
+            // On envoie un message s'il existe avec l'id demandé
+            return new JsonResponse($skillData, Response::HTTP_OK, [], true);
         }
 
-        return $this->json(
-            ['message' => "A skill was found: {$skill->getName()}, for {$skill->getId()} id"]
-        );
+        return new JsonResponse(null, Response::HTTP_NOT_FOUND);
     }
 
     #[Route('/{id}', name: 'edit', methods: 'PUT')]
-    public function edit(int $id): Response
+    public function edit(int $id, Request $request): JsonResponse
     {
         // On va chercher le skill avce l'id demandé
         $skill = $this->repository->findOneBy(['id' => $id]);
 
         // On vérifie si le skill existe
-        if(!$skill){
-            // On envoie un message s'il n'existe pas avec l'id demandé
-            throw new \Exception("No Skill found for {$id}");
+        if($skill){
+            $skill = $this->serializer->deserialize(
+                $request->getContent(),
+                Skill::class,
+                'json',
+                [AbstractNormalizer::OBJECT_TO_POPULATE => $skill]);
+
+            //On envoie en base de donnée
+            // Pas besoin de remettre le persist puisqu'on a récupéré les données de la BDD avec le findOneBy.
+            $this->manager->flush();
+
+            // On envoie un message s'il existe avec l'id demandé
+            return new JsonResponse(null, Response::HTTP_NO_CONTENT);
         }
 
-        // Modification du nom du skill
-        $skill->setName('Symfony name updated');
-
-        // On encoie en bade de donnée
-        $this->manager->flush();
-
-        // On retourne vers show pour voir la mise à jour
-        return $this->redirectToRoute('app_api_skill_show', ['id' => $skill->getId()]);
+        // On envoie un message s'il n'existe pas avec l'id demandé
+        return new JsonResponse(null, Response::HTTP_NOT_FOUND);
     }
 
     #[Route('/{id}', name: 'delete', methods: 'DELETE')]
-    public function delete(int $id): Response
+    public function delete(int $id): JsonResponse
     {
         // On va chercher le skill avce l'id demandé
         $skill = $this->repository->findOneBy(['id' => $id]);
 
         // On vérifie si le skill existe
-        if(!$skill){
-            // On envoie un message s'il n'existe pas avec l'id demandé
-            throw new \Exception("No Skill found for {$id}");
+        if($skill){
+            // On supprime le projet
+            $this->manager->remove($skill);
+
+            //On envoie en base de donnée
+            // Pas besoin de remettre le persist puisqu'on a récupéré les données de la BDD avec le findOneBy.
+            $this->manager->flush();
+
+            // On envoie un message s'il existe avec l'id demandé
+            return new JsonResponse(null, Response::HTTP_NO_CONTENT);
         }
 
-        // Supprimer le skill
-        $this->manager->remove($skill);
-
-        // On envoie en base de donnée
-        $this->manager->flush();
-
-        // On retourne un message pour dire que le skill a bien été supprimé
-        return $this->json(['message' => 'Skill resource deleted'], Response::HTTP_NO_CONTENT);
+        //On envoie un message s'il n'existe pas avec l'id demandé
+        return new JsonResponse(null, Response::HTTP_NOT_FOUND);
     }
 }
